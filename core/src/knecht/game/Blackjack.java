@@ -183,7 +183,8 @@ public class Blackjack extends ApplicationAdapter {
 		guiStage.addActor(moneyLabel);
 
 		resultLabel = new Label("", skin, "message");
-		resultLabel.setPosition(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 30);
+		resultLabel.setPosition(GAME_WIDTH / 2 - 200, GAME_HEIGHT / 2 + 30);
+		resultLabel.setFontScale(3f);
 		resultLabel.setVisible(false);
 		guiStage.addActor(resultLabel);
 	}
@@ -204,12 +205,12 @@ public class Blackjack extends ApplicationAdapter {
 
 		update(Gdx.graphics.getDeltaTime());
 
-		Gdx.gl.glClearColor(0, 1, 0, 1);
+		Gdx.gl.glClearColor(0.2f, 0.9f, 0.4f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
 		batch.setProjectionMatrix(cam.combined);
 		batch.begin();
-		batch.draw(assets.background, 0, 0, GAME_WIDTH, GAME_HEIGHT);
+//		batch.draw(assets.background, 0, 0, GAME_WIDTH, GAME_HEIGHT);
 		batch.end();
 		guiStage.draw();
 	}
@@ -231,7 +232,10 @@ public class Blackjack extends ApplicationAdapter {
 
 			break;
 		case COUNTING:
-
+			betBtn.setVisible(false);
+			cardBtn.setVisible(false);
+			ristBtn.setVisible(false);
+			splitBtn.setVisible(false);
 			if (bank.currentValueHigh > 21) {
 				playerWins();
 			} else if (bank.currentValueHigh < player.currentValueHigh && player.currentValueHigh <= 21) {
@@ -280,6 +284,7 @@ public class Blackjack extends ApplicationAdapter {
 			if(dealerDeck.usedCards.size > 20) {
 				dealerDeck.cards.addAll(dealerDeck.usedCards);
 				dealerDeck.usedCards.clear();
+				cardDeck.shuffle(dealerDeck.cards);
 			}
 			currentState = GameState.BET;
 			break;

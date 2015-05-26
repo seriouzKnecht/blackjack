@@ -63,7 +63,7 @@ public class CardDeck {
 		CardMap.put(67, "7C");
 		CardMap.put(68, "8C");
 		CardMap.put(69, "9C");
-		CardMap.put(60, "10C");
+		CardMap.put(70, "10C");
 		CardMap.put(71, "JC");
 		CardMap.put(72, "QC");
 		CardMap.put(73, "KC");

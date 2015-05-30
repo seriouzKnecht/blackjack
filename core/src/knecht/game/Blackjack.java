@@ -56,6 +56,7 @@ public class Blackjack extends ApplicationAdapter {
 	DealedCardsActor bank;
 	DealedCardsActor player;
 	GameState currentState = GameState.START;
+	GameState lastState = GameState.START;
 	private TextButton okBtn;
 	protected boolean nextState;
 
@@ -81,7 +82,7 @@ public class Blackjack extends ApplicationAdapter {
 	private void initCards() {
 		cardDeck = new CardDeck();
 		dealerDeck = new DealerDeck(this);
-		dealerDeck.init();
+		dealerDeck.init(6);
 		dealerDeck.setPosition(GAME_WIDTH - 250, GAME_HEIGHT - 300);
 		dealerDeck.setWidth(100f);
 		dealerDeck.setHeight(200f);
@@ -91,6 +92,7 @@ public class Blackjack extends ApplicationAdapter {
 		guiStage.addActor(bank);
 		player = new DealedCardsActor(this, GAME_WIDTH / 2 - 30, 200);
 		guiStage.addActor(player);
+		changeState(GameState.START);
 	}
 
 	private void initMenuBtns() {
@@ -183,7 +185,7 @@ public class Blackjack extends ApplicationAdapter {
 		guiStage.addActor(moneyLabel);
 
 		resultLabel = new Label("", skin, "message");
-		resultLabel.setPosition(GAME_WIDTH / 2 - 200, GAME_HEIGHT / 2 + 30);
+		resultLabel.setPosition(GAME_WIDTH / 2 - 600, GAME_HEIGHT / 2 + 30);
 		resultLabel.setFontScale(3f);
 		resultLabel.setVisible(false);
 		guiStage.addActor(resultLabel);
@@ -210,7 +212,7 @@ public class Blackjack extends ApplicationAdapter {
 
 		batch.setProjectionMatrix(cam.combined);
 		batch.begin();
-//		batch.draw(assets.background, 0, 0, GAME_WIDTH, GAME_HEIGHT);
+		// batch.draw(assets.background, 0, 0, GAME_WIDTH, GAME_HEIGHT);
 		batch.end();
 		guiStage.draw();
 	}
@@ -225,7 +227,7 @@ public class Blackjack extends ApplicationAdapter {
 			ristBtn.setVisible(false);
 			splitBtn.setVisible(false);
 			bankDraw();
-			currentState = GameState.COUNTING;
+			changeState(GameState.COUNTING);
 			break;
 		case BET:
 			betBtn.setVisible(true);
@@ -236,18 +238,26 @@ public class Blackjack extends ApplicationAdapter {
 			cardBtn.setVisible(false);
 			ristBtn.setVisible(false);
 			splitBtn.setVisible(false);
-			if (bank.currentValueHigh > 21) {
-				playerWins();
+
+			if (player.hasBlackJack()) {
+				playerWins(true);
+			} else if (bank.currentValueHigh > 21) {
+				playerWins(false);
 			} else if (bank.currentValueHigh < player.currentValueHigh && player.currentValueHigh <= 21) {
-				playerWins();
+				playerWins(false);
+			} else if (bank.currentValueHigh == player.currentValueHigh) {
+				playerDraw();
 			} else {
 				showMsg(loseMsg);
 			}
 			waitOk();
-			currentState = GameState.WAIT;
+			changeState(GameState.WAIT);
 
 			break;
 		case INSURANCE:
+			if (bank.currentValueHigh == 11) {
+			}
+			changeState(GameState.PLAYERDRAW);
 			break;
 		case PLAYERDRAW:
 			betBtn.setVisible(false);
@@ -256,21 +266,21 @@ public class Blackjack extends ApplicationAdapter {
 			splitBtn.setVisible(true);
 
 			if (player.currentValueLow > 21) {
-				currentState = GameState.COUNTING;
+				changeState(GameState.COUNTING);
 			}
 
-			if (player.currentValueLow == 21) {
+			if (player.currentValueHigh == 21) {
 				player.rist = true;
 			}
 
 			if (player.rist) {
-				currentState = GameState.BANKDRAW;
+				changeState(GameState.BANKDRAW);
 			}
 			break;
 		case ROUND:
 			dealStartCards();
 
-			currentState = GameState.PLAYERDRAW;
+			changeState(GameState.INSURANCE);
 			break;
 		case START:
 			nextState = false;
@@ -281,18 +291,19 @@ public class Blackjack extends ApplicationAdapter {
 			cardBtn.setVisible(false);
 			ristBtn.setVisible(false);
 			splitBtn.setVisible(false);
-			if(dealerDeck.usedCards.size > 20) {
+			if (dealerDeck.usedCards.size > dealerDeck.cards.size) {
 				dealerDeck.cards.addAll(dealerDeck.usedCards);
 				dealerDeck.usedCards.clear();
 				cardDeck.shuffle(dealerDeck.cards);
 			}
-			currentState = GameState.BET;
+
+			changeState(GameState.BET);
 			break;
 		case WAIT:
 			if (nextState) {
 				okBtn.setVisible(false);
 				resultLabel.setVisible(false);
-				currentState = GameState.START;
+				changeState(GameState.START);
 			}
 		default:
 			break;
@@ -301,9 +312,20 @@ public class Blackjack extends ApplicationAdapter {
 
 	}
 
-	private void playerWins() {
+	private void playerDraw() {
+		showMsg("Draw");
+		money += player.currentBet;
+		player.currentBet = 0;
+	}
+
+	private void playerWins(boolean bj) {
 		showMsg(winMsg);
-		money += player.currentBet * 2;
+		if (bj) {
+			money += player.currentBet * 5 / 2;
+		} else {
+			money += player.currentBet * 2;
+		}
+		player.currentBet = 0;
 	}
 
 	private void bankDraw() {
@@ -330,6 +352,11 @@ public class Blackjack extends ApplicationAdapter {
 
 	private void dealNextCard(DealedCardsActor actor) {
 		actor.addCard(dealerDeck.cards.pop());
+	}
+
+	private void changeState(GameState nextState) {
+		lastState = currentState;
+		currentState = nextState;
 	}
 
 	@Override

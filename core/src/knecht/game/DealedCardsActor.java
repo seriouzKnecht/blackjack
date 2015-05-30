@@ -84,6 +84,9 @@ public class DealedCardsActor extends Group {
 		if (currentValueHigh == currentValueLow || currentValueHigh > 21) {
 			currentValueHigh = currentValueLow;
 			valueString.append(currentValueLow);
+		} else if (currentValueHigh == 21) {
+			currentValueLow = currentValueHigh;
+			valueString.append(currentValueLow);
 		} else {
 			valueString.append(currentValueLow);
 			valueString.append("/");
@@ -99,5 +102,9 @@ public class DealedCardsActor extends Group {
 
 	public void clearBet() {
 		currentBet = 0;
+	}
+
+	public boolean hasBlackJack() {
+		return cards.size == 2 && currentValueHigh == 21;
 	}
 }
